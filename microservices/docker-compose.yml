@@ -1,0 +1,13 @@
+version: '3'
+services:
+
+ sai-auth:
+   build:
+     context: ./saiAuth
+     dockerfile: Dockerfile
+   ports:
+     - "8888:8888"
+     - "8800:8800"
+     - "8803:8803"
+
+
