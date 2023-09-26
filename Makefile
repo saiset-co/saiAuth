@@ -1,24 +1,35 @@
-up:
-	docker-compose -f ./microservices/docker-compose.yml up -d
-
-down:
-	docker-compose -f ./microservices/docker-compose.yml down --remove-orphans
+SERVICE_NAME=go-auth
+EXTERNAL_PORT=9080
+PORT=9080
 
 build:
-	make service
-	make docker
+	cp config.yml config-template.yml
+	set -a && . ./.env.dev && set +a && envsubst < config-template.yml > config.yml
+	docker-compose up -d --build
+	cp config-template.yml config.yml
+	rm config-template.yml
 
-service:
-	cd ./src/saiAuth && go mod tidy && go build -o ../../microservices/saiAuth/build/sai-auth
-	cp ./src/saiAuth/config.json ./microservices/saiAuth/build/config.json
+up:
+	cp config.yml config-template.yml
+	set -a && . ./.env.dev && set +a && envsubst < config-template.yml > config.yml
+	docker-compose up -d
+	cp config-template.yml config.yml
+	rm config-template.yml
 
-
-docker:
-	docker-compose -f ./microservices/docker-compose.yml up -d --build
+sh:
+	docker-compose exec ${SERVICE_NAME} bash
 
 log:
-	docker-compose -f ./microservices/docker-compose.yml logs -f
+	docker-compose logs -f ${SERVICE_NAME}
 
-loga:
-	docker-compose -f ./microservices/docker-compose.yml logs -f sai-auth
+down:
+	docker-compose down
 
+test:
+	go test ./tests -run TestStart -count=1
+
+docker:
+	docker build -t ${SERVICE_NAME} .
+	docker stop ${SERVICE_NAME} || true
+	docker rm ${SERVICE_NAME} || true
+	docker run -d -p ${EXTERNAL_PORT}:${PORT} --restart unless-stopped --name ${SERVICE_NAME} ${SERVICE_NAME}

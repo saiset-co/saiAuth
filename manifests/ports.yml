@@ -1,0 +1,8 @@
+        - name: http
+          containerPort: 9001
+        - name: ws
+          containerPort: 9002
+        - name: http-mongo
+          containerPort: 8901
+        - name: ws-mongo 
+          containerPort: 8902

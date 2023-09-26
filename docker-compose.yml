@@ -1,0 +1,14 @@
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 9080:9080
+    depends_on:
+      - auth-sai-storage-mongo
+    volumes:
+      - ./config.yml:/srv/config.yml
+
+volumes:
+  auth_mongo_data: {}

@@ -1,0 +1,48 @@
+common:
+  version: 1.0
+  socket:
+    enabled: false
+    port: 9081
+  http:
+    enabled: true
+    port: 9080
+  ws:
+    enabled: false
+    port: 9082
+  storage:
+    url: "${AUTH_STORAGE_URL}"
+    token: "${AUTH_STORAGE_TOKEN}"
+  sms:
+    url: "${SMS_URL}"
+    master_key: "${SMS_MASTER_KEY}"
+  email:
+    url: "${EMAIL_URL}"
+    sender: "${EMAIL_SENDER}"
+  encryption:
+    salt: "${SALT}"
+  auth:
+    flood_limit: 5
+    flood_duration: 30 #minutes
+    url: "${AUTH_URL}"
+tokens:
+  token: "${AUTH_MASTER_TOKEN}"
+  expiration:
+    refresh_token: 604800000000000 # 7 * 24 hours
+    access_token: 604800000000000 # 7 * 24 hours
+  routine_execution_period:
+    otp: 3600000000000 # 1 hour
+    refresh_token: 3600000000000 # 1 hour
+    access_token: 300000000000 # 5 minutes
+
+default_role: '{
+    "type": "default",
+    "sto_id": "-1",
+    "permissions": [
+      {"microservice": "go-auth","method": "delete_users","required_params": [{"all":false,"param":"internal_id","values":["$internal_id"]}],"restricted_params": []},
+    ],  
+    "data": {
+      "name": "Default",
+      "alias": "default"
+    }
+  }'
+
