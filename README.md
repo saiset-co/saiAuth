@@ -4,9 +4,6 @@ Bash: `make restart`
 ### Start / Restart in docker:
 Bash: `make docker`
 
-//todo: add index for TokenPermission  
-//todo: add index email, phone, password to users
-
 ## Roles
 ### Create role:
 ```json
