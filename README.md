@@ -7,8 +7,6 @@ Bash: `make docker`
 //todo: add index for TokenPermission  
 //todo: add index email, phone, password to users
 
-### Demo URL: http://devops.f1xiq.com:9001
-
 ## Roles
 ### Create role:
 ```json
