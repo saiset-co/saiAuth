@@ -19,10 +19,12 @@ type InternalService struct {
 	DefaultRole entities.Role
 	Validate    *validator.Validate
 
+	SmsEnabled    bool
 	SmsServiceUrl string
 
 	MasterKey string
 
+	EmailEnabled    bool
 	EmailServiceUrl string
 	EmailSender     string
 

@@ -218,6 +218,10 @@ func (is *InternalService) sendResetPasswordVerifyCodeHandler(data interface{}, 
 }
 
 func (is *InternalService) sendSMS(phone, message, template string, variables map[string]interface{}) error {
+	if !is.SmsEnabled {
+		return nil
+	}
+
 	smsReq := SMSRequest{
 		Method: "send",
 		Data: SMSData{
@@ -241,6 +245,10 @@ func (is *InternalService) sendSMS(phone, message, template string, variables ma
 }
 
 func (is *InternalService) sendEmail(email, message string) error {
+	if !is.EmailEnabled {
+		return nil
+	}
+
 	emailReq := EmailRequest{
 		Method: "send",
 		Data: EmailData{

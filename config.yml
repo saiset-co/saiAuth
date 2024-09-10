@@ -13,9 +13,11 @@ common:
     url: "${AUTH_STORAGE_URL}"
     token: "${AUTH_STORAGE_TOKEN}"
   sms:
+    enabled: false
     url: "${SMS_URL}"
     master_key: "${SMS_MASTER_KEY}"
   email:
+    enabled: false
     url: "${EMAIL_URL}"
     sender: "${EMAIL_SENDER}"
   encryption:

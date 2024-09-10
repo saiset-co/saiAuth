@@ -33,23 +33,29 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 	rules := map[string]interface{}{
 		"email":    "required|email",
 		"phone":    "required",
-		"otp_code": "required",
 		"password": "required",
 	}
+
+	if is.SmsEnabled || is.EmailEnabled {
+		rules["otp_code"] = "required"
+	}
+
 	errs := is.Validate.ValidateMap(dataMap, rules)
 	if len(errs) > 0 {
 		log.Println("Validation error in signUpHandler:", errs)
 		return createErrorResponse(errs), http.StatusBadRequest, errors.New("not valid data")
 	}
 
-	// Check OTP code
-	ok = is.checkOTPCode(dataMap)
-	if !ok {
-		return NewErrorResponse(
-			"OTPError",
-			"OPE_05",
-			"Invalid OTP code",
-		), http.StatusBadRequest, nil
+	if is.EmailEnabled || is.SmsEnabled {
+		// Check OTP code
+		ok = is.checkOTPCode(dataMap)
+		if !ok {
+			return NewErrorResponse(
+				"OTPError",
+				"OPE_05",
+				"Invalid OTP code",
+			), http.StatusBadRequest, nil
+		}
 	}
 
 	// Check if user exists

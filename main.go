@@ -34,9 +34,11 @@ func main() {
 
 	validate := validator.New()
 
+	smsEnabled := svc.GetConfig("common.sms.enabled", false).(bool)
 	smsUrl := svc.GetConfig("common.sms.url", "").(string)
 	masterKey := svc.GetConfig("common.sms.master_key", "").(string)
 	defaultRole := svc.GetConfig("default_role", "").(string)
+	emailEnabled := svc.GetConfig("common.email.enabled", false).(bool)
 	emailServiceUrl := svc.GetConfig("common.email.url", "").(string)
 	emailSender := svc.GetConfig("common.email.sender", "").(string)
 
@@ -76,9 +78,11 @@ func main() {
 		DefaultRole: role,
 		Validate:    validate,
 
+		SmsEnabled:    smsEnabled,
 		SmsServiceUrl: smsUrl,
 		MasterKey:     masterKey,
 
+		EmailEnabled:    emailEnabled,
 		EmailServiceUrl: emailServiceUrl,
 		EmailSender:     emailSender,
 
