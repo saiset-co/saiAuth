@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/Limpid-LLC/go-auth/internal/storage"
 )
-
-//todo: rewrite this for using struct User
 
 func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (interface{}, int, error) {
 	dataMap, ok := data.(map[string]interface{})
@@ -29,21 +28,24 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 		return errResp, http.StatusBadRequest, errors.New("restricted fields")
 	}
 
-	// Validate required fields and formats
-	rules := map[string]interface{}{
-		"email":    "required|email",
-		"phone":    "required",
-		"password": "required",
+	phone, _ := dataMap["phone"].(string)
+	email, _ := dataMap["email"].(string)
+	otpCode, _ := dataMap["otp_code"].(string)
+	password, _ := dataMap["password"].(string)
+
+	if phone == "" && email == "" {
+		log.Printf("Validation errors: phone or email required")
+		return nil, http.StatusBadRequest, fmt.Errorf("phone or email required")
 	}
 
-	if is.SmsEnabled || is.EmailEnabled {
-		rules["otp_code"] = "required"
+	if (is.SmsEnabled || is.EmailEnabled) && otpCode == "" {
+		log.Printf("Validation errors: otp_code is required")
+		return nil, http.StatusBadRequest, fmt.Errorf("otp_code is required")
 	}
 
-	errs := is.Validate.ValidateMap(dataMap, rules)
-	if len(errs) > 0 {
-		log.Println("Validation error in signUpHandler:", errs)
-		return createErrorResponse(errs), http.StatusBadRequest, errors.New("not valid data")
+	if password == "" {
+		log.Printf("Validation errors: password is required")
+		return nil, http.StatusBadRequest, fmt.Errorf("password is required")
 	}
 
 	if is.EmailEnabled || is.SmsEnabled {
@@ -70,7 +72,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 
 	userData, _ := dataMap["data"].(interface{})
 
-	user := is.createUser(dataMap["email"].(string), dataMap["phone"].(string), dataMap["password"].(string), userData)
+	user := is.createUser(email, phone, password, userData)
 
 	err := is.UsersRepository.CreateUser(user)
 
@@ -87,8 +89,11 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 	_, err = is.Storage.Remove(storage.SaiStorageRemoveRequest{
 		Collection: "otpCodes",
 		Select: map[string]interface{}{
-			"code":  dataMap["otp_code"],
-			"phone": dataMap["phone"],
+			"code": otpCode,
+			"$or": []map[string]interface{}{
+				{"email": email},
+				{"phone": phone},
+			},
 		},
 	})
 
