@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
-
-	"github.com/Limpid-LLC/go-auth/internal/storage"
 )
 
 type OTPCode struct {
@@ -84,16 +83,21 @@ func (is *InternalService) sendVerifyCodeHandler(data interface{}, meta interfac
 	// Set the expiration date (e.g., 5 minutes from now)
 	expDate := time.Now().Add(5 * time.Minute)
 
-	// Save the OTP code using SaiStorage
-	saveReq := storage.SaiStorageSaveRequest{
-		Collection: "otpCodes",
-		Data: OTPCode{
-			Code:      code,
-			ExpiredAt: expDate,
-			Phone:     phone,
+	saveReq := adapter.Request{
+		Method: "create",
+		Data: adapter.CreateRequest{
+			Collection: "otpCodes",
+			Documents: []interface{}{
+				OTPCode{
+					Code:      code,
+					ExpiredAt: expDate,
+					Phone:     phone,
+				},
+			},
 		},
 	}
-	_, err := is.Storage.Save(saveReq)
+
+	_, err := is.Storage.Send(saveReq)
 	if err != nil {
 		log.Printf("Error saving OTP code to SaiStorage: %v", err)
 		return nil, http.StatusInternalServerError, err
@@ -166,18 +170,23 @@ func (is *InternalService) sendResetPasswordVerifyCodeHandler(data interface{}, 
 
 	// Set the expiration date (e.g., 5 minutes from now)
 	expDate := time.Now().Add(5 * time.Minute)
-	// Save the OTP code using SaiStorage
-	saveReq := storage.SaiStorageSaveRequest{
-		Collection: "otpCodes",
-		Data: OTPCode{
-			Code:      code,
-			ExpiredAt: expDate,
-			Phone:     request.Phone,
-			Email:     request.Email,
+
+	saveReq := adapter.Request{
+		Method: "create",
+		Data: adapter.CreateRequest{
+			Collection: "otpCodes",
+			Documents: []interface{}{
+				OTPCode{
+					Code:      code,
+					ExpiredAt: expDate,
+					Phone:     request.Phone,
+					Email:     request.Email,
+				},
+			},
 		},
 	}
 
-	_, err = is.Storage.Save(saveReq)
+	_, err = is.Storage.Send(saveReq)
 	if err != nil {
 		log.Printf("Error saving OTP code to SaiStorage: %v", err)
 		return NewErrorResponse(
@@ -272,14 +281,19 @@ func (is *InternalService) sendEmail(email, message string) error {
 }
 
 func (is *InternalService) removeExpiredOtpCodes() {
-	resp, err := is.Storage.Remove(storage.SaiStorageRemoveRequest{
-		Collection: "otpCodes",
-		Select: map[string]interface{}{
-			"expDate": map[string]interface{}{
-				"$lt": time.Now(),
+	req := adapter.Request{
+		Method: "delete",
+		Data: adapter.DeleteRequest{
+			Collection: "otpCodes",
+			Select: map[string]interface{}{
+				"expDate": map[string]interface{}{
+					"$lt": time.Now(),
+				},
 			},
 		},
-	})
+	}
+
+	resp, err := is.Storage.Send(req)
 	if err != nil {
 		log.Printf("Error removing expired OTP codes: %v", err)
 	} else {

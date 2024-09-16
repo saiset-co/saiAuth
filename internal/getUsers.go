@@ -1,9 +1,10 @@
 package internal
 
 import (
-	"github.com/Limpid-LLC/go-auth/internal/storage"
 	"log"
 	"net/http"
+
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 )
 
 func (is *InternalService) getUsersHandler(data interface{}, meta interface{}) (interface{}, int, error) {
@@ -17,12 +18,15 @@ func (is *InternalService) getUsersHandler(data interface{}, meta interface{}) (
 		), http.StatusBadRequest, nil
 	}
 
-	// Fetch users from SaiStorage
-	getReq := storage.SaiStorageGetRequest{
-		Collection: "users",
-		Select:     selectData,
+	getReq := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "users",
+			Select:     selectData,
+		},
 	}
-	res, err := is.Storage.Get(getReq)
+
+	res, err := is.Storage.Send(getReq)
 	if err != nil {
 		log.Println("Cannot Get from sai storage, err:", err)
 		return NewErrorResponse(
@@ -34,10 +38,7 @@ func (is *InternalService) getUsersHandler(data interface{}, meta interface{}) (
 
 	// Remove hashed passwords from the response
 	for _, user := range res.Result {
-		userMap, ok := user.(map[string]interface{})
-		if ok {
-			delete(userMap, "___password")
-		}
+		delete(user, "___password")
 	}
 
 	return NewOkResponse(res.Result)

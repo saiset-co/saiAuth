@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/Limpid-LLC/go-auth/internal/storage"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"log"
 	"net/http"
 )
@@ -16,12 +16,15 @@ func (is *InternalService) deleteUsersHandler(data interface{}, meta interface{}
 		), http.StatusBadRequest, nil
 	}
 
-	updateReq := storage.SaiStorageRemoveRequest{
-		Collection: "users",
-		Select:     req,
+	updateReq := adapter.Request{
+		Method: "delete",
+		Data: adapter.DeleteRequest{
+			Collection: "users",
+			Select:     req,
+		},
 	}
 
-	_, err := is.Storage.Remove(updateReq)
+	_, err := is.Storage.Send(updateReq)
 	if err != nil {
 		log.Println(
 			"Cannot remove user, err:", err)

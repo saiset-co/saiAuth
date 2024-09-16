@@ -5,11 +5,11 @@ import (
 	"github.com/Limpid-LLC/go-auth/internal"
 	"github.com/Limpid-LLC/go-auth/internal/entities"
 	"github.com/Limpid-LLC/go-auth/internal/repo"
-	"github.com/Limpid-LLC/go-auth/internal/storage"
 	"github.com/Limpid-LLC/go-auth/logger"
 	"github.com/Limpid-LLC/saiService"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"log"
 	_ "net/http/pprof"
 	"time"
@@ -27,7 +27,7 @@ func main() {
 	url := svc.GetConfig("common.storage.url", "").(string)
 	token := svc.GetConfig("common.storage.token", "").(string)
 
-	store := &storage.SaiStorage{
+	store := &adapter.SaiStorage{
 		Url:   url,
 		Token: token,
 	}

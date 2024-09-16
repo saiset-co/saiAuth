@@ -3,14 +3,15 @@ package internal
 import (
 	"github.com/Limpid-LLC/go-auth/internal/entities"
 	"github.com/Limpid-LLC/go-auth/internal/repo"
-	"github.com/Limpid-LLC/go-auth/internal/storage"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
+
 	"github.com/Limpid-LLC/saiService"
 	"github.com/go-playground/validator/v10"
 )
 
 type InternalService struct {
 	Context *saiService.Context
-	Storage *storage.SaiStorage
+	Storage *adapter.SaiStorage
 
 	UsersRepository            *repo.UsersRepository
 	TokenPermissionsRepository *repo.TokenPermissionsRepository

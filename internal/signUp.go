@@ -3,12 +3,11 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"log"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/Limpid-LLC/go-auth/internal/storage"
 )
 
 func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (interface{}, int, error) {
@@ -85,17 +84,22 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 		), http.StatusInternalServerError, err
 	}
 
-	// Remove OTP code from storage
-	_, err = is.Storage.Remove(storage.SaiStorageRemoveRequest{
-		Collection: "otpCodes",
-		Select: map[string]interface{}{
-			"code": otpCode,
-			"$or": []map[string]interface{}{
-				{"email": email},
-				{"phone": phone},
+	req := adapter.Request{
+		Method: "delete",
+		Data: adapter.DeleteRequest{
+			Collection: "otpCodes",
+			Select: map[string]interface{}{
+				"code": otpCode,
+				"$or": []map[string]interface{}{
+					{"email": email},
+					{"phone": phone},
+				},
 			},
 		},
-	})
+	}
+
+	// Remove OTP code from storage
+	_, err = is.Storage.Send(req)
 
 	if err != nil {
 		log.Println("Cannot remove OTP code from storage, err:", err)
@@ -126,31 +130,41 @@ func (is *InternalService) checkRestrictedFields(dataMap map[string]interface{})
 }
 
 func (is *InternalService) checkOTPCode(dataMap map[string]interface{}) bool {
-	otpRes, err := is.Storage.Get(storage.SaiStorageGetRequest{
-		Collection: "otpCodes",
-		Select: map[string]interface{}{
-			"code": dataMap["otp_code"],
-			"$or": []map[string]interface{}{
-				{"email": dataMap["email"]},
-				{"phone": dataMap["phone"]},
-			},
-			"expired_at": map[string]interface{}{
-				"$gte": time.Now(),
+	req := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "otpCodes",
+			Select: map[string]interface{}{
+				"code": dataMap["otp_code"],
+				"$or": []map[string]interface{}{
+					{"email": dataMap["email"]},
+					{"phone": dataMap["phone"]},
+				},
+				"expired_at": map[string]interface{}{
+					"$gte": time.Now(),
+				},
 			},
 		},
-	})
+	}
+
+	otpRes, err := is.Storage.Send(req)
 	return err == nil && len(otpRes.Result) > 0
 }
 
 func (is *InternalService) checkUserExistence(dataMap map[string]interface{}) bool {
-	res, err := is.Storage.Get(storage.SaiStorageGetRequest{
-		Collection: "users",
-		Select: map[string]interface{}{
-			"$or": []map[string]interface{}{
-				{"email": dataMap["email"]},
-				{"phone": dataMap["phone"]},
+	req := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "users",
+			Select: map[string]interface{}{
+				"$or": []map[string]interface{}{
+					{"email": dataMap["email"]},
+					{"phone": dataMap["phone"]},
+				},
 			},
 		},
-	})
+	}
+
+	res, err := is.Storage.Send(req)
 	return err != nil || len(res.Result) == 0
 }

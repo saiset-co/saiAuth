@@ -16,6 +16,7 @@ const placeholder = "$"
 func (is InternalService) generateAccessTokens(user *entities.User) ([]entities.AccessToken, error) {
 	roles := user.Roles
 	var tokenPermissions []entities.TokenPermission
+	var iTokenPermissions []interface{}
 	roles = append(roles, is.DefaultRole)
 
 	for _, role := range roles {
@@ -51,10 +52,11 @@ func (is InternalService) generateAccessTokens(user *entities.User) ([]entities.
 			}
 
 			tokenPermissions = append(tokenPermissions, tokenPermission)
+			iTokenPermissions = append(iTokenPermissions, tokenPermission)
 		}
 	}
 
-	err := is.TokenPermissionsRepository.SaveTokenPermissions(tokenPermissions)
+	err := is.TokenPermissionsRepository.SaveTokenPermissions(iTokenPermissions)
 
 	if err != nil {
 		return nil, err

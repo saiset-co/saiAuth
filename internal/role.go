@@ -3,13 +3,13 @@ package internal
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
 
 	"github.com/Limpid-LLC/go-auth/internal/entities"
-	"github.com/Limpid-LLC/go-auth/internal/storage"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type Request struct {
@@ -36,12 +36,15 @@ func (is *InternalService) createRoleHandler(data interface{}, meta interface{})
 		return nil, http.StatusInternalServerError, err
 	}
 
-	req := storage.SaiStorageSaveRequest{
-		Collection: "roles",
-		Data:       &role,
+	req := adapter.Request{
+		Method: "create",
+		Data: adapter.CreateRequest{
+			Collection: "roles",
+			Documents:  []interface{}{role},
+		},
 	}
 
-	_, err = is.Storage.Save(req)
+	_, err = is.Storage.Send(req)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -77,39 +80,45 @@ func (is *InternalService) updateRolesHandler(data interface{}, meta interface{}
 		), http.StatusBadRequest, nil
 	}
 
-	updateReq := storage.SaiStorageUpdateRequest{
-		Collection: "roles",
-		Select:     selectData,
-		Data:       updateData,
+	updateReq := adapter.Request{
+		Method: "update",
+		Data: adapter.UpdateRequest{
+			Collection: "roles",
+			Select:     selectData,
+			Document:   map[string]interface{}{"$set": updateData},
+		},
 	}
 
-	getReq := storage.SaiStorageGetRequest{
-		Collection: "roles",
-		Select:     selectData,
+	getReq := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "roles",
+			Select:     selectData,
+		},
 	}
 
-	_, err := is.Storage.Update(updateReq)
+	_, err := is.Storage.Send(updateReq)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	roles, err := is.Storage.Get(getReq)
+	rolesData, err := is.Storage.Send(getReq)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	for _, roleData := range roles.Result {
+	var roles []entities.Role
+	jsonData, err := json.Marshal(rolesData.Result)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	err = json.Unmarshal(jsonData, &roles)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	for _, role := range roles {
 		// remove related tokens
-		jsonData, err := json.Marshal(roleData)
-		if err != nil {
-			panic(err)
-		}
-
-		var role entities.Role
-		err = json.Unmarshal(jsonData, &role)
-		if err != nil {
-			panic(err)
-		}
 
 		err = is.TokenPermissionsRepository.RemoveTokenPermissionsByRoleInternalID(role.InternalID)
 
@@ -138,38 +147,47 @@ func (is *InternalService) deleteRolesHandler(data interface{}, meta interface{}
 		), http.StatusBadRequest, nil
 	}
 
-	req := storage.SaiStorageRemoveRequest{
-		Collection: "roles",
-		Select:     dataMap,
+	getReq := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "roles",
+			Select:     dataMap,
+		},
 	}
 
-	roles, err := is.Storage.Get(req)
+	req := adapter.Request{
+		Method: "delete",
+		Data: adapter.DeleteRequest{
+			Collection: "roles",
+			Select:     dataMap,
+		},
+	}
+
+	rolesData, err := is.Storage.Send(getReq)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	if len(roles.Result) == 0 {
+	if len(rolesData.Result) == 0 {
 		return nil, http.StatusInternalServerError, errors.New("no roles to delete by the request")
 	}
 
-	_, err = is.Storage.Remove(req)
+	var roles []entities.Role
+	jsonData, err := json.Marshal(rolesData.Result)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	err = json.Unmarshal(jsonData, &roles)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	for _, roleData := range roles.Result {
-		// remove related tokens
-		jsonData, err := json.Marshal(roleData)
-		if err != nil {
-			panic(err)
-		}
+	_, err = is.Storage.Send(req)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
 
-		var role entities.Role
-		err = json.Unmarshal(jsonData, &role)
-		if err != nil {
-			panic(err)
-		}
-
+	for _, role := range roles {
 		err = is.TokenPermissionsRepository.RemoveTokenPermissionsByRoleInternalID(role.InternalID)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
@@ -192,34 +210,38 @@ func (is *InternalService) attachRole(userID string, roleID string) error {
 		return err
 	}
 
-	// Fetch the role
-	result, err := is.Storage.GetEncoded(storage.SaiStorageGetRequest{
-		Collection: "roles",
-		Select: map[string]interface{}{
-			"internal_id": roleID,
+	getReq := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "roles",
+			Select: map[string]interface{}{
+				"internal_id": roleID,
+			},
 		},
-	})
+	}
+
+	// Fetch the role
+	rolesData, err := is.Storage.Send(getReq)
 	if err != nil {
 		return err
 	}
 
-	if len(result.Result) == 0 {
+	if len(rolesData.Result) == 0 {
 		return errors.New("role not found")
 	}
 
-	var role *entities.Role
-	err = json.Unmarshal(result.Result[0], &role)
+	var roles []entities.Role
+	jsonData, err := json.Marshal(rolesData.Result)
 	if err != nil {
-		if syntaxErr, ok := err.(*json.SyntaxError); ok {
-			fmt.Printf("Syntax error at byte offset %d: %s", syntaxErr.Offset, err)
-		} else {
-			fmt.Println(err)
-		}
+		return err
+	}
+	err = json.Unmarshal(jsonData, &roles)
+	if err != nil {
 		return err
 	}
 
 	// Attach the role to the user
-	user.AddRole(*role)
+	user.AddRole(roles[0])
 
 	// Update the user
 	err = is.UsersRepository.UpdateUser(user)
@@ -375,12 +397,15 @@ func (is *InternalService) getRolesHandler(data interface{}, meta interface{}) (
 		), http.StatusBadRequest, nil
 	}
 
-	// Fetch users from SaiStorage
-	getReq := storage.SaiStorageGetRequest{
-		Collection: "roles",
-		Select:     selectData,
+	req := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "roles",
+			Select:     selectData,
+		},
 	}
-	res, err := is.Storage.Get(getReq)
+
+	res, err := is.Storage.Send(req)
 	if err != nil {
 		log.Println("Cannot Get from sai storage, err:", err)
 		return NewErrorResponse(

@@ -3,7 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Limpid-LLC/go-auth/internal/storage"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"log"
 	"net/http"
 	"time"
@@ -79,15 +79,20 @@ func (is *InternalService) restorePasswordHandler(data interface{}, meta interfa
 		), http.StatusInternalServerError, nil
 	}
 
-	// Remove OTP code from storage
-	_, err = is.Storage.Remove(storage.SaiStorageRemoveRequest{
-		Collection: "otpCodes",
-		Select: map[string]interface{}{
-			"code":  request.OtpCode,
-			"phone": request.Phone,
-			"email": request.Email,
+	req := adapter.Request{
+		Method: "delete",
+		Data: adapter.DeleteRequest{
+			Collection: "otpCodes",
+			Select: map[string]interface{}{
+				"code":  request.OtpCode,
+				"phone": request.Phone,
+				"email": request.Email,
+			},
 		},
-	})
+	}
+
+	// Remove OTP code from storage
+	_, err = is.Storage.Send(req)
 
 	if err != nil {
 		log.Println("Cannot remove OTP code from storage, err:", err)
@@ -102,16 +107,21 @@ func (is *InternalService) restorePasswordHandler(data interface{}, meta interfa
 }
 
 func (is *InternalService) checkOTPCodeRestorePassword(request RestorePasswordRequest) bool {
-	otpRes, err := is.Storage.Get(storage.SaiStorageGetRequest{
-		Collection: "otpCodes",
-		Select: map[string]interface{}{
-			"code":  request.OtpCode,
-			"phone": request.Phone,
-			"email": request.Email,
-			"expired_at": map[string]interface{}{
-				"$gte": time.Now(),
+	req := adapter.Request{
+		Method: "read",
+		Data: adapter.ReadRequest{
+			Collection: "otpCodes",
+			Select: map[string]interface{}{
+				"code":  request.OtpCode,
+				"phone": request.Phone,
+				"email": request.Email,
+				"expired_at": map[string]interface{}{
+					"$gte": time.Now(),
+				},
 			},
 		},
-	})
+	}
+
+	otpRes, err := is.Storage.Send(req)
 	return err == nil && len(otpRes.Result) > 0
 }

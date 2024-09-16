@@ -1,8 +1,8 @@
 package internal
 
 import (
-	"github.com/Limpid-LLC/go-auth/internal/storage"
 	"github.com/Limpid-LLC/go-auth/logger"
+	"github.com/saiset-co/sai-storage-mongo/external/adapter"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -57,14 +57,16 @@ func (is *InternalService) updateUserHandler(data interface{}, meta interface{})
 		delete(updateData, "password")
 	}
 
-	//todo: move to repository
-	updateReq := storage.SaiStorageUpdateRequest{
-		Collection: "users",
-		Select:     selectData,
-		Data:       updateData,
+	updateReq := adapter.Request{
+		Method: "read",
+		Data: adapter.UpdateRequest{
+			Collection: "users",
+			Select:     selectData,
+			Document:   map[string]interface{}{"$set": updateData},
+		},
 	}
 
-	_, err := is.Storage.Update(updateReq)
+	_, err := is.Storage.Send(updateReq)
 	if err != nil {
 		logger.Logger.Error("Cannot update user data", zap.Error(err))
 		return NewErrorResponse(
@@ -78,9 +80,11 @@ func (is *InternalService) updateUserHandler(data interface{}, meta interface{})
 }
 
 func (is *InternalService) userDataExists(userData, selectData map[string]interface{}) bool {
-	req := storage.SaiStorageGetRequest{
+	readReq := adapter.ReadRequest{
 		Collection: "users",
+		Select:     map[string]interface{}{},
 	}
+
 	logger.Logger.Debug("userDataExists", zap.Any("userData", userData))
 
 	filter := make(map[string]interface{})
@@ -93,8 +97,11 @@ func (is *InternalService) userDataExists(userData, selectData map[string]interf
 	if email, ok := userData["email"].(string); ok {
 		filterEmail := copyMap(filter)
 		filterEmail["email"] = email
-		req.Select = filterEmail
-		res, err := is.Storage.Get(req)
+		readReq.Select = filterEmail
+		res, err := is.Storage.Send(adapter.Request{
+			Method: "read",
+			Data:   readReq,
+		})
 		logger.Logger.Debug("userDataExists", zap.Any("res", res))
 		if err != nil {
 			logger.Logger.Error("Can't get existing user from the DB", zap.Error(err))
@@ -108,9 +115,12 @@ func (is *InternalService) userDataExists(userData, selectData map[string]interf
 	if phone, ok := userData["phone"].(string); ok {
 		filterPhone := copyMap(filter)
 		filterPhone["phone"] = phone
-		req.Select = filterPhone
+		readReq.Select = filterPhone
 
-		res, err := is.Storage.Get(req)
+		res, err := is.Storage.Send(adapter.Request{
+			Method: "read",
+			Data:   readReq,
+		})
 		logger.Logger.Debug("userDataExists", zap.Any("res", res))
 		if err != nil {
 			logger.Logger.Error("Can't get existing user from the DB", zap.Error(err))
