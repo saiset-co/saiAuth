@@ -42,7 +42,6 @@ func (is InternalService) generateAccessTokens(user *entities.User) ([]entities.
 				Token:                      token,
 				UserID:                     user.InternalId,
 				Type:                       role.Type,
-				StoID:                      role.StoID,
 				ExpiredAt:                  expiredAt,
 				RoleInternalID:             role.InternalID,
 				PermissionMicroservice:     permission.Microservice,
@@ -78,7 +77,6 @@ func (is InternalService) tokenPermissionExists(tokens []entities.AccessToken, t
 	for _, tokenPermission := range tokens {
 		if tokenPermission.Token == tokenToSearch.Token &&
 			tokenPermission.RoleId == tokenToSearch.RoleId &&
-			tokenPermission.StoID == tokenToSearch.StoID &&
 			tokenPermission.Type == tokenToSearch.Type {
 
 			return true

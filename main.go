@@ -38,12 +38,19 @@ func main() {
 	smsUrl := svc.GetConfig("common.sms.url", "").(string)
 	masterKey := svc.GetConfig("common.sms.master_key", "").(string)
 	defaultRole := svc.GetConfig("default_role", "").(string)
+	adminRole := svc.GetConfig("admin_role", "").(string)
 	emailEnabled := svc.GetConfig("common.email.enabled", false).(bool)
 	emailServiceUrl := svc.GetConfig("common.email.url", "").(string)
 	emailSender := svc.GetConfig("common.email.sender", "").(string)
 
 	var role entities.Role
 	err := json.Unmarshal([]byte(defaultRole), &role)
+	if err != nil {
+		log.Fatalln(errors.Wrap(err, "Default role un-marshal error"))
+	}
+
+	var aRole entities.Role
+	err = json.Unmarshal([]byte(adminRole), &aRole)
 	if err != nil {
 		log.Fatalln(errors.Wrap(err, "Default role un-marshal error"))
 	}
@@ -76,6 +83,7 @@ func main() {
 		TokenPermissionsRepository: tokenPermissionsRepository,
 
 		DefaultRole: role,
+		AdminRole:   aRole,
 		Validate:    validate,
 
 		SmsEnabled:    smsEnabled,

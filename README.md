@@ -11,17 +11,11 @@ Bash: `make docker`
   "method": "create_role",
   "data": {
     "type": "sto",
-    "sto_id": 10,
     "permissions": [
       {
         "microservice": "go-auth",
         "method": "test",
         "required_params": [
-          {
-            "param": "sto_id",
-            "values": ["10"],
-            "all": false
-          },
           {
             "param":  "user.internal_id",
             "values": ["$.internal_id"],
@@ -58,10 +52,9 @@ Bash: `make docker`
 {
   "method": "update_roles",
   "data": {
-    "Select": {"sto_id":  10},
+    "Select": {},
     "Data": {
       "type": "sto",
-      "sto_id": 10,
       "permissions": [
         {
           "microservice": "go-auth",
@@ -84,9 +77,7 @@ Bash: `make docker`
 ```json
 {
   "method": "get_roles",
-  "data": {
-     "sto_id": "1"
-  }
+  "data": {}
 }
 ```
 
@@ -94,9 +85,7 @@ Bash: `make docker`
 ```json
 {
   "method": "delete_roles",
-  "data": {
-     "sto_id": "1" 
-  }
+  "data": {}
 }
 ```
 
@@ -223,7 +212,6 @@ Bash: `make docker`
 {
   "method": "test_cred",
   "data":{
-    "sto_id":      "",
     "param2":      "",
     "internal_id": "",
     "first_name":  "",

@@ -3,18 +3,16 @@ package entities
 import "time"
 
 type AccessToken struct {
-	Token     string  `json:"token"`
-	Type      string  `json:"type"`
-	RoleId    string  `json:"roleId"`
-	StoID     *string `json:"sto_id,omitempty"`
-	ExpiredAt int64   `json:"expired_at"`
+	Token     string `json:"token"`
+	Type      string `json:"type"`
+	RoleId    string `json:"roleId"`
+	ExpiredAt int64  `json:"expired_at"`
 }
 
 type TokenPermission struct {
 	Token                      string   `json:"token"`
 	Type                       string   `json:"type"`
 	UserID                     string   `json:"user_id"`
-	StoID                      *string  `json:"sto_id,omitempty"`
 	ExpiredAt                  int64    `json:"expired_at"`
 	RoleInternalID             string   `json:"role_internal_id"`
 	PermissionMicroservice     string   `json:"permission_microservice"`
@@ -28,7 +26,6 @@ func (tp TokenPermission) CreateAccessToken() AccessToken {
 		Token:     tp.Token,
 		RoleId:    tp.RoleInternalID,
 		Type:      tp.Type,
-		StoID:     tp.StoID,
 		ExpiredAt: tp.ExpiredAt,
 	}
 }
@@ -36,7 +33,6 @@ func (tp TokenPermission) CreateAccessToken() AccessToken {
 type Role struct {
 	InternalID  string       `json:"internal_id"`
 	Type        string       `json:"type" validate:"required"`
-	StoID       *string      `json:"sto_id,omitempty" validate:"required"`
 	Permissions []Permission `json:"permissions" validate:"required"`
 	Data        interface{}  `json:"data"`
 }

@@ -18,6 +18,7 @@ type InternalService struct {
 
 	Collection  string
 	DefaultRole entities.Role
+	AdminRole   entities.Role
 	Validate    *validator.Validate
 
 	SmsEnabled    bool

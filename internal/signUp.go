@@ -70,8 +70,13 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 	}
 
 	userData, _ := dataMap["data"].(interface{})
-
 	user := is.createUser(email, phone, password, userData)
+
+	usersMap, _, _ := is.getUsersHandler(map[string]interface{}{}, map[string]interface{}{})
+	users := usersMap.([]map[string]interface{})
+	if len(users) == 0 {
+		user.AddRole(is.AdminRole)
+	}
 
 	err := is.UsersRepository.CreateUser(user)
 
