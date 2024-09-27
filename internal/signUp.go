@@ -72,7 +72,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 	userData, _ := dataMap["data"].(interface{})
 	user := is.createUser(email, phone, password, userData)
 
-	usersMap, _, _ := is.getUsersHandler(map[string]interface{}{}, map[string]interface{}{})
+	usersMap, _, _ := is.getUsersHandler(map[string]interface{}{"___roles.data.alias": "admin"}, nil)
 	usersOk := usersMap.(ResponseOk)
 	users := usersOk.Result.([]map[string]interface{})
 	if len(users) == 0 {
