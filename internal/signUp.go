@@ -116,7 +116,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 		), http.StatusInternalServerError, err
 	}
 
-	return NewOkResponse(res)
+	return NewOkResponse(res.Result)
 }
 
 func (is *InternalService) checkRestrictedFields(dataMap map[string]interface{}) (bool, *ErrorResponse) {

@@ -49,7 +49,7 @@ func (is *InternalService) createRoleHandler(data interface{}, meta interface{})
 		return nil, http.StatusInternalServerError, err
 	}
 
-	return NewOkResponse(res)
+	return NewOkResponse(res.Result)
 }
 
 func (is *InternalService) updateRolesHandler(data interface{}, meta interface{}) (interface{}, int, error) {
