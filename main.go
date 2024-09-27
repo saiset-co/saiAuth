@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	name := "go-auth"
+	name := "Auth"
 
 	svc := saiService.NewService(name)
 
