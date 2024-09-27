@@ -44,12 +44,12 @@ func (is *InternalService) createRoleHandler(data interface{}, meta interface{})
 		},
 	}
 
-	_, err = is.Storage.Send(req)
+	res, err := is.Storage.Send(req)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 
-	return NewOkResponse("Role created successfully")
+	return NewOkResponse(res)
 }
 
 func (is *InternalService) updateRolesHandler(data interface{}, meta interface{}) (interface{}, int, error) {

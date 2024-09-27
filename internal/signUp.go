@@ -105,7 +105,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 	}
 
 	// Remove OTP code from storage
-	_, err = is.Storage.Send(req)
+	res, err := is.Storage.Send(req)
 
 	if err != nil {
 		log.Println("Cannot remove OTP code from storage, err:", err)
@@ -116,7 +116,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 		), http.StatusInternalServerError, err
 	}
 
-	return NewOkResponse("User registered successfully")
+	return NewOkResponse(res)
 }
 
 func (is *InternalService) checkRestrictedFields(dataMap map[string]interface{}) (bool, *ErrorResponse) {
