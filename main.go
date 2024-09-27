@@ -52,7 +52,7 @@ func main() {
 	var aRole entities.Role
 	err = json.Unmarshal([]byte(adminRole), &aRole)
 	if err != nil {
-		log.Fatalln(errors.Wrap(err, "Default role un-marshal error"))
+		log.Fatalln(errors.Wrap(err, "Admin role un-marshal error"))
 	}
 
 	salt := svc.GetConfig("common.encryption.salt", "").(string)

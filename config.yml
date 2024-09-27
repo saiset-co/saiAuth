@@ -61,7 +61,7 @@ admin_role: '{
     {"microservice": "Auth","method": "delete_roles","required_params": [],"restricted_params": []},
     {"microservice": "Auth","method": "attach_role","required_params": [],"restricted_params": []},
     {"microservice": "Auth","method": "detach_role","required_params": [],"restricted_params": []},
-    {"microservice": "Auth","method": "get_roles","required_params": [],"restricted_params": []},
+    {"microservice": "Auth","method": "get_roles","required_params": [],"restricted_params": []}
   ],
   "data": {
     "name": "Admin",
