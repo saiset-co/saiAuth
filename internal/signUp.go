@@ -74,7 +74,7 @@ func (is *InternalService) signUpHandler(data interface{}, meta interface{}) (in
 
 	usersMap, _, _ := is.getUsersHandler(map[string]interface{}{}, map[string]interface{}{})
 	usersOk := usersMap.(ResponseOk)
-	users := usersOk.Result.(map[string]interface{})
+	users := usersOk.Result.([]map[string]interface{})
 	if len(users) == 0 {
 		user.AddRole(is.AdminRole)
 	}
