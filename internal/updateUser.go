@@ -58,7 +58,7 @@ func (is *InternalService) updateUserHandler(data interface{}, meta interface{})
 	}
 
 	updateReq := adapter.Request{
-		Method: "read",
+		Method: "update",
 		Data: adapter.UpdateRequest{
 			Collection: "users",
 			Select:     selectData,
